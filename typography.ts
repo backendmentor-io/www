@@ -27,7 +27,7 @@ export default function typographyStyles({ theme }: PluginUtils) {
     },
     DEFAULT: {
       css: {
-        '--tw-prose-body': theme('colors.zinc.600'),
+        '--tw-prose-body': theme('text-inherit'),
         '--tw-prose-headings': theme('colors.zinc.900'),
         '--tw-prose-links': theme('colors.teal.500'),
         '--tw-prose-links-hover': theme('colors.teal.600'),
@@ -77,6 +77,7 @@ export default function typographyStyles({ theme }: PluginUtils) {
         p: {
           marginTop: theme('spacing.7'),
           marginBottom: theme('spacing.7'),
+          fontSize: theme('fontSize.xl'),
         },
 
         // Headings

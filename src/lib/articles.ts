@@ -43,8 +43,12 @@ export async function getAllArticlesByTag(tag: string) {
 
 export async function getTags() {
   let articles = await getAllArticles()
-  return articles
-    .map((x) => x.tags)
-    .flatMap((x) => x)
-    .filter((x) => Boolean(x))
+  return [
+    ...new Set(
+      articles
+        .map((x) => x.tags)
+        .flatMap((x) => x)
+        .filter((x) => Boolean(x)),
+    ),
+  ]
 }

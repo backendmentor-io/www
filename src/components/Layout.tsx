@@ -1,5 +1,8 @@
 import react from 'react'
-import { Subscribe, Explore, About, ContactMe } from './Subscribe'
+import { Subscribe } from './Subscribe'
+import { About } from './About'
+import { Explore } from './Explore'
+import { ContactMe } from './ContactMe'
 import { getAllArticles, getTags } from '@/lib/articles'
 
 export async function Layout({ children }: { children: React.ReactNode }) {
