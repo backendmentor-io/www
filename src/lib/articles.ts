@@ -6,6 +6,7 @@ interface Article {
   author: string
   date: string
   tags: string[]
+  level: string
 }
 
 export interface ArticleWithSlug extends Article {
@@ -41,12 +42,29 @@ export async function getAllArticlesByTag(tag: string) {
   return articles.filter((x) => x.tags && x.tags.includes(tag))
 }
 
+export async function getAllArticlesByLevel(level: string) {
+  const articles = await getAllArticles()
+  return articles.filter((x) => x.level && x.level === level)
+}
+
 export async function getTags() {
   let articles = await getAllArticles()
   return [
     ...new Set(
       articles
         .map((x) => x.tags)
+        .flatMap((x) => x)
+        .filter((x) => Boolean(x)),
+    ),
+  ]
+}
+
+export async function getLevels() {
+  let articles = await getAllArticles()
+  return [
+    ...new Set(
+      articles
+        .map((x) => x.level)
         .flatMap((x) => x)
         .filter((x) => Boolean(x)),
     ),

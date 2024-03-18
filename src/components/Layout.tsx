@@ -1,9 +1,7 @@
-import react from 'react'
-import { Subscribe } from './Subscribe'
 import { About } from './About'
 import { Explore } from './Explore'
 import { ContactMe } from './ContactMe'
-import { getAllArticles, getTags } from '@/lib/articles'
+import { getTags } from '@/lib/articles'
 
 export async function Layout({ children }: { children: React.ReactNode }) {
   let tags = await getTags()
@@ -21,7 +19,6 @@ export async function Layout({ children }: { children: React.ReactNode }) {
               and resources
             </p>
             <div>
-              <Subscribe />
               <Explore tags={tags} />
               <About />
               <ContactMe />

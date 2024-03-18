@@ -1,0 +1,143 @@
+import { ArticleLayout } from '@/components/ArticleLayout'
+
+export const article = {
+  author: 'Greg Macbean',
+  date: '2022-03-14',
+  title: 'A simple http node endpoint on AWS',
+  description:
+    'In this example you will learn how to build and deploy a simple http node endpoint on AWS using AWS CDK.',
+  tags: ['examples', 'node']
+}
+
+export const metadata = {
+  title: article.title,
+  description: article.description,
+}
+
+export default (props) => <ArticleLayout article={article} {...props} />
+
+<br/>
+
+<em>This code for this example is available on [GitHub](https://github.com/backendmentor-io/examples/tree/main/aws-node-simple-http-endpoint).</em>
+
+As a backend developer one of the most common tasks you will be asked to do is create a HTTP endpoint to execute some code.
+
+This example shows you the simplest way that you can possibly do that.
+
+It takes a single node function and deploys it to AWS as a Lambda. The stack will output a function URL (aka HTTP endpoint) where you can invoke the it.
+
+Before continuing, if you are unfamiliar with AWS CDK I do recommend reading [What is AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/home.html) first.
+
+## In this example we
+
+- Create a Node.js Lambda function using AWS CDK.
+- Configure the runtime version and entry point for the Lambda function.
+- Deploy the Lambda function to AWS.
+- Generate an HTTP endpoint URL for the Lambda function.
+- Output the URL of the Lambda function as a CloudFormation output for easy access.
+
+## Stack overview
+
+### First we define our Lambda Function construct (`myLambda`) in the `stack.ts` file
+
+```typescript
+const myLambda = new NodejsFunction(this, 'MyLambda', {
+      runtime: Runtime.NODEJS_16_X,
+      entry: './lib/handler.js',
+      handler: 'handler',
+    });
+```
+
+- To define our function we use the `NodejsFunction` [construct](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.NodejsFunction.html). This is a [higher-level construct](https://docs.aws.amazon.com/cdk/v2/guide/constructs.html) specifically to be used with Node functions.
+- The Lambda function can be configured to use any supported Node.js runtime. In this case I am using `runtime: Runtime.NODEJS_16_X`.
+- Finally we configure the entry file location at `./lib/handler.js`, and the `handler` function to be used as the entry point.
+- You will note that in this example we don't use TypeScript, it's just plain old JavaScript to keep things as simple as possible.
+
+### Lets review the application code in the `handler.js` file
+
+```javascript
+export const handler = async (event) => {
+  // Your logic goes here...
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: 'Hello from Lambda!' }),
+  };
+};
+```
+
+- This is our application code. We can do whatever we want here in response to the HTTP request.
+- The function defined as an asynchronous arrow function. It is possible to use [callbacks](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html#nodejs-handler-callback) but not recommended.
+- It receives the [event param](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-concepts.html#gettingstarted-concepts-event) with details of what triggered the function.
+- From the function we simply return the response object with statusCode 200 and a JSON stringified body containing a message.
+
+### Adding a Function URL to the Lambda function
+
+```typescript
+const lambdaUrl = myLambda.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
+    });
+```
+
+- AWS Lambdas offer a [built-in HTTPS endpoint](https://aws.amazon.com/blogs/aws/announcing-aws-lambda-function-urls-built-in-https-endpoints-for-single-function-microservices/) for single function services.
+- The Lambda function is configured to generate a function URL using the `addFunctionUrl` method.
+- We don't need any authentication so the `authType` is set to `FunctionUrlAuthType.NONE`.
+
+### Getting the URL output
+
+```typescript
+new cdk.CfnOutput(this, 'LambdaEndpoint', {
+      value: lambdaUrl.url,
+      description: 'Lambda function endpoint URL',
+    });
+```
+
+- The generated URL of the Lambda function (`lambdaUrl.url`) is outputted as a CloudFormation output (`LambdaEndpoint`).
+- This URL serves as the HTTP endpoint for invoking the Lambda function directly.
+
+## Usage
+
+Once you've set up the project, you can deploy the Lambda function using AWS CDK:
+
+```bash
+cdk deploy
+```
+
+After deployment, the CloudFormation stack outputs will include the Lambda function's endpoint URL. You can use this URL for testing your Lambda function.
+
+## Testing Lambda Output with curl
+
+To test the Lambda function's output using curl, follow these steps:
+
+1. Copy the Lambda function's endpoint URL from the CloudFormation stack outputs.
+
+2. Use curl to send a GET request to the Lambda endpoint:
+
+   ```bash
+   curl -X GET <lambda-endpoint-url>
+   ```
+
+   Replace `<lambda-endpoint-url>` with the actual Lambda function's endpoint URL.
+
+3. You should receive a response from the Lambda function similar to the following:
+
+   ```json
+   { "message": "Hello from Lambda!" }
+   ```
+
+   This confirms that the Lambda function is working correctly.
+
+## Reporting Issues or Suggestions
+
+If you encounter any inaccuracies in the code or have suggestions for improvement, we'd love to hear from you! Please submit a GitHub issue with a brief explanation of the problem or idea, along with any relevant details.
+
+Before submitting an issue, please check if someone else has already reported it. If not, feel free to create a new one.
+
+## References
+
+- https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html
+- https://aws.amazon.com/blogs/aws/announcing-aws-lambda-function-urls-built-in-https-endpoints-for-single-function-microservices/
+- https://docs.aws.amazon.com/cdk/v2/guide/constructs.html
+- https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html#nodejs-handler-callback
+- https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-concepts.html#gettingstarted-concepts-event
+- https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.NodejsFunction.html
