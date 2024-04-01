@@ -7,11 +7,12 @@ import '@/styles/tailwind.css'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s - Greg Macbean',
-    default: 'Greg Macbean - Software designer, founder, and amateur astronaut',
+    template: '%s - Backend Mentor',
+    default:
+      'Dive into the world of backend development with practical examples and resources',
   },
   description:
-    'I’m Greg,  I am a cloud native developer & architect living & working in Sydney, Australia.',
+    'Learn backend & serverless development using AWS from practical examples & real world solutions.',
   alternates: {
     types: {
       'application/rss+xml': `${process.env.NEXT_PUBLIC_SITE_URL}/feed.xml`,

@@ -16,7 +16,7 @@ export function Article({ article }: { article: ArticleWithSlug }) {
 export function LatestArticle({ article }: { article: ArticleWithSlug }) {
   return (
     <article className="lg:col-span-2 lg:p-8">
-      <label className="uppercase">{formatDate(article.date)}</label>
+      <label className="uppercase">LATEST - {formatDate(article.date)}</label>
       <h2 className="py-3 text-3xl font-extrabold underline decoration-teal-500 hover:decoration-4 lg:text-5xl">
         <a href={`/articles/${article.slug}`}>{article.title}</a>
       </h2>

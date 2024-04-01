@@ -5,8 +5,8 @@ export const article = {
         date: '2022-03-15',
         title: 'Autoscaling AWS ECS using memory thresholds',
         description:
-                `In this example we will add autoscaling based on memory thresholds to our ECS Cluster`,
-        tags: ['examples'],
+                `In this example we will add autoscaling to an ECS Cluster based on memory thresholds`,
+        tags: ['examples', 'the-journeyman'],
 }
 
 export const metadata = {
@@ -17,3 +17,9 @@ export const metadata = {
 export default (props) => <ArticleLayout article={article} {...props} />
 
 
+
+## References
+
+- https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html
+- https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-auto-scaling.html
+- https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-autoscaling-stepscaling.html

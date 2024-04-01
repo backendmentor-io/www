@@ -15,22 +15,26 @@ export function ContactMe() {
             />
           </Disclosure.Button>
           <Disclosure.Panel className="flex grow flex-col gap-y-5 pb-4 font-light">
+            <p>I'd love to hear from you! </p>
             <p>
-              If you have a question or wanted to connect for any reason. You
-              can{' '}
-              <a
-                href="mailto:hello@backendmentor.io"
-                className="font-semibold italic"
-              >
-                email me
-              </a>{' '}
-              or connect through{' '}
+              If you want to connect for any reason its easiest to reach out on{' '}
               <a
                 href="https://www.linkedin.com/in/gregmacbean"
                 className="font-semibold italic"
               >
                 linkedin
               </a>
+            </p>
+            <p>
+              If have any thoughts to share on an article or example please
+              submit a{' '}
+              <a
+                href="https://github.com/backendmentor-io"
+                className="font-semibold italic"
+              >
+                GitHub
+              </a>{' '}
+              issue and we can discuss there!
             </p>
           </Disclosure.Panel>
         </>
