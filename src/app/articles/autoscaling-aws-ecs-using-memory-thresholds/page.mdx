@@ -1,25 +1,227 @@
 import { ArticleLayout } from '@/components/ArticleLayout'
+import { ReportingIssues } from '@/components/ReportingIssues'
 
 export const article = {
-        author: 'Greg Macbean',
-        date: '2022-03-15',
-        title: 'Autoscaling AWS ECS using memory thresholds',
-        description:
-                `In this example we will add autoscaling to an ECS Cluster based on memory thresholds`,
-        tags: ['examples', 'the-journeyman'],
+  author: 'Greg Macbean',
+  date: '2022-03-15',
+  title: 'How to autoscale AWS ECS using memory thresholds',
+  description:
+    `In this example we will add autoscaling to an ECS Cluster based on memory thresholds`,
+  tags: ['examples'],
 }
 
 export const metadata = {
-        title: article.title,
-        description: article.description,
+  title: article.title,
+  description: article.description,
 }
 
 export default (props) => <ArticleLayout article={article} {...props} />
 
+This example deploys an Amazon ECS cluster on AWS Fargate. The ECS cluster automatically scales up and down based on memory and CPU thresholds.
 
+A use-case for this might be when your application needs to handle high traffic bursts or batch processing jobs.
+
+During peak traffic, the cluster will scale up adding more instances with available CPU and memory to handle the increased load.
+
+Then when traffic subsides, scaling down will reduce costs by running fewer instances.
+
+## In this example we
+
+- Create an ECS cluster
+- Create a basic API service
+- Define a scalable target for the ECS service
+- Create a CPU scaling policy
+- Create a memory scaling policy
+- Review the alerts in CloudWatch
+- Review the scaling triggers
+
+## Getting started
+
+To get started pull down the code for this example from [GitHub](https://github.com/backendmentor-io/examples/tree/main/aws-node-simple-http-endpoint) and open it in your favourite IDE.
+
+Open up the `stack.ts` file to review the full stack below.
+
+```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import { Construct } from 'constructs';
+import {
+  AdjustmentType,
+  MetricAggregationType,
+  ScalableTarget,
+  ServiceNamespace,
+  StepScalingPolicy,
+} from 'aws-cdk-lib/aws-applicationautoscaling';
+
+export class AwsEcsAutoScalingStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // Create a VPC
+    const vpc = new ec2.Vpc(this, 'MyVpc', {
+      maxAzs: 2,
+    });
+
+    // Create an ECS cluster
+    const cluster = new ecs.Cluster(this, 'MyCluster', {
+      vpc: vpc,
+    });
+
+    // Create a basic API service
+    const apiService = new ecsPatterns.ApplicationLoadBalancedFargateService(
+      this,
+      'MyApiService',
+      {
+        cluster: cluster,
+        taskImageOptions: {
+          image: ecs.ContainerImage.fromRegistry('nginx'),
+        },
+      }
+    );
+
+    // Define a scalable target for the ECS service
+    const scalableTarget = new ScalableTarget(this, 'ScalableTarget', {
+      serviceNamespace: ServiceNamespace.ECS,
+      resourceId: `service/${cluster.clusterName}/${apiService.service.serviceName}`,
+      scalableDimension: 'ecs:service:DesiredCount',
+      minCapacity: 1,
+      maxCapacity: 2,
+    });
+
+    // Create a CPU scaling policy
+    new StepScalingPolicy(this, 'CPUScalingPolicy', {
+      scalingTarget: scalableTarget,
+      metricAggregationType: MetricAggregationType.AVERAGE,
+      adjustmentType: AdjustmentType.CHANGE_IN_CAPACITY,
+      scalingSteps: [
+        { upper: 25, change: -1 },
+        { lower: 85, change: +1 },
+        { lower: 95, change: +3 },
+      ],
+      cooldown: cdk.Duration.seconds(60),
+      metric: new cloudwatch.Metric({
+        namespace: 'AWS/ECS',
+        metricName: 'CPUUtilization',
+        dimensionsMap: {
+          ClusterName: cluster.clusterName,
+          ServiceName: apiService.service.serviceName,
+        },
+        period: cdk.Duration.minutes(1),
+      }),
+    });
+
+    // Create a memory scaling policy
+    new StepScalingPolicy(this, 'MemoryScalingPolicy', {
+      scalingTarget: scalableTarget,
+      metricAggregationType: MetricAggregationType.AVERAGE,
+      adjustmentType: AdjustmentType.CHANGE_IN_CAPACITY,
+      scalingSteps: [
+        { upper: 25, change: -1 },
+        { lower: 85, change: +1 },
+        { lower: 95, change: +3 },
+      ],
+      cooldown: cdk.Duration.seconds(60),
+      metric: new cloudwatch.Metric({
+        namespace: 'AWS/ECS',
+        metricName: 'MemoryUtilization',
+        dimensionsMap: {
+          ClusterName: cluster.clusterName,
+          ServiceName: apiService.service.serviceName,
+        },
+        period: cdk.Duration.minutes(1),
+      }),
+    });
+  }
+}
+```
+
+## Walkthrough
+
+Lets take a look at the relevant parts of the stack.
+
+### First we need a Virtual Private Cloud (VPC) to deploy our app into:
+- The VPC provides network isolation for the ECS cluster and its resources.
+
+### Create an ECS cluster using ecs.Cluster:
+- An ECS cluster is created within the VPC using the ecs.Cluster construct. 
+- This cluster is where ECS tasks (containers) will be deployed and managed.
+- We need to associate it with the VPC.
+
+```typescript
+// Create a VPC
+    const vpc = new ec2.Vpc(this, 'MyVpc', {
+      maxAzs: 2,
+    });
+
+    // Create an ECS cluster
+    const cluster = new ecs.Cluster(this, 'MyCluster', {
+      vpc: vpc,
+    });
+```
+
+### Create a basic API service:
+
+```typescript
+    // Create a basic API service
+    const apiService = new ecsPatterns.ApplicationLoadBalancedFargateService(
+      this,
+      'MyApiService',
+      {
+        cluster: cluster,
+        taskImageOptions: {
+          image: ecs.ContainerImage.fromRegistry('nginx'),
+        },
+      }
+    );
+```
+
+- For this simple demo we define a Fargate task image with Nginx.
+- We need to associate it with the created cluster.
+
+### Define a scalable target for the ECS service:
+
+- Specify service namespace as ECS.
+- Provide resource ID as `service/${cluster.clusterName}/${apiService.service.serviceName}.`
+- Set minimum and maximum capacity.
+
+### Create a CPU scaling policy
+
+- Associate it with the previously defined scalable target.
+- Specify metric aggregation type, adjustment type, scaling steps, and cooldown period.
+- Define a CloudWatch metric for CPU utilization.
+
+### Create a memory scaling policy
+
+- Associate it with the same scalable target.
+
+## Usage
+
+Once you've set up the project, you can deploy the ECS cluster and scaling using AWS CDK:
+
+```bash
+cdk deploy
+```
+
+After deployment, the CloudFormation stack outputs will include the Lambda function's endpoint URL. You can use this URL for testing your Lambda function.
+
+## Testing
+
+
+## Cleanup
+
+Once you are done don't forget to tear down the stack to avoid further charges:
+
+```bash
+cdk destroy
+```
 
 ## References
 
 - https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html
 - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-auto-scaling.html
 - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-autoscaling-stepscaling.html
+
+<ReportingIssues  articleSlug="aws-node-simple-http-endpoint" />

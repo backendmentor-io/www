@@ -15,7 +15,7 @@ export function ContactMe() {
             />
           </Disclosure.Button>
           <Disclosure.Panel className="flex grow flex-col gap-y-5 pb-4 font-light">
-            <p>I'd love to hear from you! </p>
+            <p>I&apos;d love to hear from you! </p>
             <p>
               If you want to connect for any reason its easiest to reach out on{' '}
               <a

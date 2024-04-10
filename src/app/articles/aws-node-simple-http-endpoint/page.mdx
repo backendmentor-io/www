@@ -1,9 +1,10 @@
 import { ArticleLayout } from '@/components/ArticleLayout'
+import { ReportingIssues } from '@/components/ReportingIssues'
 
 export const article = {
   author: 'Greg Macbean',
   date: '2022-03-14',
-  title: 'How to deploy a node endpoint on AWS',
+  title: 'How to deploy a node function on AWS as an HTTP endpoint',
   description:
     'In this example you will learn how to build and deploy a simple node endpoint on AWS using AWS CDK',
   tags: ['examples', 'the-journeyman']
@@ -18,13 +19,11 @@ export default (props) => <ArticleLayout article={article} {...props} />
 
 <br/>
 
-As a backend developer one of the most common tasks you will be asked to do is create a HTTP endpoint to execute some code.
+This example takes a single node function and deploys it to AWS as an AWS Lambda. The output will provide a function URL which you can do an HTTP request against to invoke it.
 
-This example shows you the simplest way that you can possibly do that.
+A simple use-case for this would be have an endpoint to send your websites contact form submission to.
 
-It takes a single node function and deploys it to AWS as a Lambda. The stack will output a function URL where you can run it.
-
-Before continuing, if you are unfamiliar with AWS CDK I do recommend reading [What is AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/home.html) first.
+Before continuing, if you are unfamiliar with AWS CDK I do recommend reading [What is AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/home.html). Then follow [Getting started with the AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html) to configure your machine correctly.
 
 ## In this example we
 
@@ -39,11 +38,42 @@ Before continuing, if you are unfamiliar with AWS CDK I do recommend reading [Wh
 
 To get started pull down the code for this example from [GitHub](https://github.com/backendmentor-io/examples/tree/main/aws-node-simple-http-endpoint) and open it in your favourite IDE.
 
-## Code
+Open up the `stack.ts` file to review the full stack below.
 
+```typescript
+import * as cdk from 'aws-cdk-lib';
+import { FunctionUrlAuthType, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Construct } from 'constructs';
 
+export class AwsNodeSimpleHttpEndpointStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // Configure the Lambda function
+    const myLambda = new NodejsFunction(this, 'MyLambda', {
+      runtime: Runtime.NODEJS_16_X,
+      entry: './lib/handler.js',
+      handler: 'handler',
+    });
+
+    // Configure the Lambda functions endpoint URL
+    const lambdaUrl = myLambda.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
+    });
+
+    // Output the Lambda functions endpoint URL
+    new cdk.CfnOutput(this, 'LambdaEndpoint', {
+      value: lambdaUrl.url,
+      description: 'Lambda function endpoint URL',
+    });
+  }
+}
+```
 
 ## Walkthrough
+
+Lets take a look at the relevant parts of the stack.
 
 ### First we define our Lambda Function construct (`myLambda`) in the `stack.ts` file
 
@@ -134,6 +164,15 @@ To test the Lambda function's output using curl, follow these steps:
 
    This confirms that the Lambda function is working correctly.
 
+
+## Cleanup
+
+Once you are done don't forget to tear down the stack to avoid further charges:
+
+```bash
+cdk destroy
+```
+
 ## References
 
 - https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html
@@ -143,8 +182,4 @@ To test the Lambda function's output using curl, follow these steps:
 - https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-concepts.html#gettingstarted-concepts-event
 - https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.NodejsFunction.html
 
-## Reporting Issues or Suggestions
-
-If you encounter any inaccuracies in the code or have suggestions for improvement, we'd love to hear from you! Please submit a GitHub issue with a brief explanation of the problem or idea, along with any relevant details.
-
-Before submitting an issue, please check if someone else has already reported it. If not, feel free to create a new one.
+<ReportingIssues  articleSlug="aws-node-simple-http-endpoint" />

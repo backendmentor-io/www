@@ -23,7 +23,7 @@ export function About() {
               thoughts & best practises.
             </p>
             <p>
-              So whether you're a beginner or a seasoned pro, join me to
+              So whether you&apos;re a beginner or a seasoned pro, join me to
               discover, experiment & level up your backend skills.
             </p>
             <p>

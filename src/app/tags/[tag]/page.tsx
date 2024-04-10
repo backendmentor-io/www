@@ -1,5 +1,5 @@
 import { Article } from '@/components/ArticleCard'
-import { getAllArticles, getAllArticlesByTag } from '@/lib/articles'
+import { getAllArticles, getAllArticlesByTag, getTags } from '@/lib/articles'
 
 export default async function Home({ params }: { params: { tag: string } }) {
   let articles = await getAllArticlesByTag(params.tag)
@@ -13,4 +13,12 @@ export default async function Home({ params }: { params: { tag: string } }) {
       </div>
     </>
   )
+}
+
+export async function generateStaticParams() {
+  const tags = await getTags()
+
+  return tags.map((tag) => ({
+    tag: `${tag}`,
+  }))
 }
